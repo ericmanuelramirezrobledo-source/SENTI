@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Senti</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: una sola columna centrada; barra superior fija con "volver"; cada sección es una pantalla que se muestra u oculta. */
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --fg: #12202a;
+  --muted: #55646f;
+  --line: #8fc3d6;
+  --accent: #0b6e8a;
+  --accent-fg: #ffffff;
+  --soft: #dceef3;
+  --pain: #d23f3f;
+  color-scheme: light;
+  --font: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 17px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 40px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 980px; margin: 0 auto; }
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+  margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+}
+.bar-in { max-width: 980px; margin: 0 auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.brand { font-weight: 700; font-size: 1.5rem; letter-spacing: .02em; color: var(--accent); margin-right: auto; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.btn {
+  min-height: 46px; padding: 8px 16px; border-radius: 10px; border: 2px solid var(--line);
+  background: var(--surface); font-weight: 700;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+main { padding-top: 24px; display: grid; gap: 20px; }
+h1 { font-size: clamp(1.7rem, 5vw, 2.4rem); line-height: 1.15; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.3rem; margin: 0; text-wrap: balance; }
+h3 { font-size: .85rem; margin: 0; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+p { margin: 0; max-width: 65ch; }
+.muted { color: var(--muted); }
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.choice {
+  text-align: left; padding: 22px; min-height: 130px; border-radius: 14px; border: 2px solid var(--line);
+  background: var(--surface); display: grid; gap: 6px; align-content: start;
+}
+.choice:hover { border-color: var(--accent); }
+.choice b { font-size: 1.35rem; }
+.choice span { color: var(--muted); }
+.panel { background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; }
+.video {
+  aspect-ratio: 16 / 9; width: 100%; max-width: 640px; margin: 0 auto; border: 2px dashed var(--line);
+  border-radius: 12px; display: grid; place-content: center; text-align: center; gap: 6px; padding: 16px; background: var(--bg);
+}
+.video .cap { font-size: clamp(1.3rem, 4vw, 1.9rem); font-weight: 700; color: var(--accent); text-wrap: balance; }
+.video small { color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.opt { text-align: left; min-height: 52px; padding: 10px 14px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface); }
+.opt:hover { border-color: var(--accent); }
+.opt[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 700; }
+.group { display: grid; gap: 10px; }
+/* cuerpo */
+.body-layout { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 640px) { .body-layout { grid-template-columns: 1fr; } }
+.tabs { display: flex; gap: 8px; }
+.tabs .btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+svg.body { width: 100%; max-width: 300px; height: auto; margin: 0 auto; display: block; }
+.zone { fill: var(--soft); stroke: var(--accent); stroke-width: 1.5; cursor: pointer; transition: fill .15s; }
+.zone:hover { fill: var(--accent); fill-opacity: .35; }
+.zone.on { fill: var(--pain); fill-opacity: .8; stroke: var(--pain); }
+.zone:focus-visible { outline: none; stroke: var(--fg); stroke-width: 3; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; min-height: 40px; }
+.chip { padding: 6px 12px; border-radius: 999px; background: var(--pain); color: #fff; font-weight: 700; }
+/* paciente */
+.typed { min-height: 84px; border: 2px solid var(--line); border-radius: 12px; padding: 14px; font-size: 1.8rem; letter-spacing: .12em; background: var(--surface); overflow-wrap: anywhere; }
+.typed:empty::before { content: attr(data-ph); font-size: 1rem; letter-spacing: 0; color: var(--muted); }
+.abc { width: 100%; max-width: 640px; height: auto; margin: 0 auto; display: block; border-radius: 12px; border: 2px solid var(--line); background: #fff; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Base del navegador (reset) */
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+
+<div class="bar"><div class="bar-in">
+  <span class="brand">Senti</span>
+  <button class="btn" id="btn-menu" hidden>← Menú de secciones</button>
+  <button class="btn" id="btn-home" hidden>Inicio</button>
+</div></div>
+
+<div class="wrap"><main>
+
+<!-- INICIO -->
+<section id="s-home" class="group" style="gap:20px">
+  <div class="group">
+    <h1>¿Quién está usando Senti ahora?</h1>
+    <p class="muted">Comunicación entre personal de salud y personas sordomudas. Elige tu perfil para continuar.</p>
+  </div>
+  <div class="choices">
+    <button class="choice" data-go="nurse"><b>Enfermero/a o médico</b><span>Señalar el cuerpo, hacer preguntas y dar respuestas en lengua de señas.</span></button>
+    <button class="choice" data-go="patient"><b>Paciente sordomudo</b><span>Deletrear con el abecedario en lengua de señas para que el personal de salud lo lea.</span></button>
+  </div>
+</section>
+
+<!-- MENU ENFERMERO -->
+<section id="s-nurse" class="group" style="gap:20px" hidden>
+  <div class="group">
+    <h1>¿Qué necesitas hacer?</h1>
+    <p class="muted">Puedes cambiar de sección en cualquier momento con el botón “Menú de secciones”.</p>
+  </div>
+  <div class="choices">
+    <button class="choice" data-go="body"><b>1. Mapa del cuerpo</b><span>El paciente señala dónde le duele o dónde está el problema.</span></button>
+    <button class="choice" data-go="questions"><b>2. Preguntas al paciente</b><span>Elige una pregunta y el intérprete la muestra en lengua de señas.</span></button>
+    <button class="choice" data-go="answers"><b>3. Respuestas del doctor</b><span>Elige una respuesta para mostrársela al paciente en lengua de señas.</span></button>
+  </div>
+</section>
+
+<!-- CUERPO -->
+<section id="s-body" class="group" style="gap:16px" hidden>
+  <h1>Mapa del cuerpo</h1>
+  <p class="muted">Pide al paciente que toque la zona donde siente dolor o tiene el problema. Puede marcar varias.</p>
+  <div class="panel">
+    <div class="body-layout">
+      <div class="group">
+        <div class="tabs" role="group" aria-label="Vista del cuerpo">
+          <button class="btn" id="tab-front" aria-pressed="true">Frente</button>
+          <button class="btn" id="tab-back" aria-pressed="false">Espalda</button>
+        </div>
+        <svg class="body" id="bodysvg" viewBox="0 0 200 392" role="group" aria-label="Figura del cuerpo humano"></svg>
+      </div>
+      <div class="group">
+        <h3>Zonas marcadas</h3>
+        <div class="chips" id="chips" aria-live="polite"></div>
+        <p class="muted" id="chips-empty">Aún no hay zonas marcadas.</p>
+        <div><button class="btn" id="clear">Borrar marcas</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PREGUNTAS -->
+<section id="s-questions" class="group" style="gap:16px" hidden>
+  <h1>Preguntas al paciente</h1>
+  <div class="panel">
+    <div class="video" id="vq">
+      <small>Aquí irá el video del intérprete en lengua de señas</small>
+      <div class="cap" id="vq-cap">Elige una pregunta</div>
+    </div>
+  </div>
+  <div class="grid" id="qlist"></div>
+</section>
+
+<!-- RESPUESTAS -->
+<section id="s-answers" class="group" style="gap:16px" hidden>
+  <h1>Respuestas del doctor</h1>
+  <div class="panel">
+    <div class="video" id="va">
+      <small>Aquí irá el video del intérprete en lengua de señas</small>
+      <div class="cap" id="va-cap">Elige una respuesta</div>
+    </div>
+  </div>
+  <div id="alist" class="group" style="gap:18px"></div>
+</section>
+
+<!-- PACIENTE -->
+<section id="s-patient" class="group" style="gap:16px" hidden>
+  <h1>Abecedario en lengua de señas</h1>
+  <p class="muted">El paciente irá señalando las letras. Aquí aparecerán escritas para que el doctor las lea.</p>
+  <div class="typed" id="typed" data-ph="Las letras elegidas aparecerán aquí"></div>
+  <img class="abc" alt="Abecedario en Lengua de Señas Mexicana, de la A a la Z con la Ñ" src="abecedario.jpg">
+</section>
+
+</main></div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var screens = ['home', 'nurse', 'body', 'questions', 'answers', 'patient'];
+  var current = 'home';
+
+  function go(id) {
+    current = id;
+    screens.forEach(function (s) { $('s-' + s).hidden = (s !== id); });
+    var inSection = id === 'body' || id === 'questions' || id === 'answers';
+    $('btn-menu').hidden = !inSection;
+    $('btn-home').hidden = (id === 'home');
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll('[data-go]').forEach(function (b) {
+    b.addEventListener('click', function () { go(b.getAttribute('data-go')); });
+  });
+  $('btn-menu').addEventListener('click', function () { go('nurse'); });
+  $('btn-home').addEventListener('click', function () { go('home'); });
+
+  /* ---------- Cuerpo ---------- */
+  var NS = 'http://www.w3.org/2000/svg';
+  function pair(key, name, fn, view) {
+    var left = view === 'front' ? 'derecho' : 'izquierdo';
+    var right = view === 'front' ? 'izquierdo' : 'derecho';
+    var a = fn(false), b = fn(true);
+    return [
+      { id: key + 'L', label: name.replace('{s}', left), t: a.t, a: a.a },
+      { id: key + 'R', label: name.replace('{s}', right), t: b.t, a: b.a }
+    ];
+  }
+  function rect(x, y, w, h, rx) { return { t: 'rect', a: { x: x, y: y, width: w, height: h, rx: rx || 6 } }; }
+  function ell(cx, cy, rx, ry) { return { t: 'ellipse', a: { cx: cx, cy: cy, rx: rx, ry: ry } }; }
+  function buildZones(view) {
+    var f = view === 'front';
+    var z = [
+      { id: 'cabeza', label: f ? 'Cabeza' : 'Cabeza (atrás)', t: 'ellipse', a: { cx: 100, cy: 32, rx: 24, ry: 28 } },
+      { id: 'cuello', label: f ? 'Cuello' : 'Cuello (atrás)', t: 'rect', a: { x: 90, y: 58, width: 20, height: 14, rx: 4 } },
+      { id: 'torso1', label: f ? 'Pecho' : 'Espalda alta', t: 'rect', a: { x: 68, y: 74, width: 64, height: 48, rx: 10 } },
+      { id: 'torso2', label: f ? 'Abdomen' : 'Espalda baja', t: 'rect', a: { x: 70, y: 124, width: 60, height: 44, rx: 8 } },
+      { id: 'torso3', label: f ? 'Pelvis' : 'Glúteos', t: 'rect', a: { x: 68, y: 170, width: 64, height: 28, rx: 10 } }
+    ];
+    z = z.concat(
+      pair('hombro', 'Hombro {s}', function (r) { return { t: 'circle', a: { cx: r ? 144 : 56, cy: 82, r: 12 } }; }, view),
+      pair('brazo', 'Brazo {s}', function (r) { return rect(r ? 140 : 42, 96, 18, 56); }, view),
+      pair('antebrazo', 'Antebrazo {s}', function (r) { return rect(r ? 144 : 38, 154, 18, 54); }, view),
+      pair('mano', 'Mano {s}', function (r) { return ell(r ? 153 : 47, 220, 9, 12); }, view),
+      pair('muslo', f ? 'Muslo {s}' : 'Muslo {s} (atrás)', function (r) { return rect(r ? 102 : 70, 200, 28, 70, 8); }, view),
+      pair('rodilla', f ? 'Rodilla {s}' : 'Rodilla {s} (atrás)', function (r) { return ell(r ? 116 : 84, 279, 14, 9); }, view),
+      pair('pierna', f ? 'Pierna {s}' : 'Pantorrilla {s}', function (r) { return rect(r ? 104 : 72, 290, 24, 76, 8); }, view),
+      pair('pie', 'Pie {s}', function (r) { return ell(r ? 120 : 80, 378, 15, 8); }, view)
+    );
+    return z;
+  }
+
+  var view = 'front';
+  var marked = {}; /* clave "view:id" -> texto */
+  var svg = $('bodysvg');
+
+  function drawBody() {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    buildZones(view).forEach(function (zn) {
+      var el = document.createElementNS(NS, zn.t);
+      Object.keys(zn.a).forEach(function (k) { el.setAttribute(k, zn.a[k]); });
+      var key = view + ':' + zn.id;
+      var text = zn.label + (view === 'back' ? ' · espalda' : '');
+      el.setAttribute('class', 'zone' + (marked[key] ? ' on' : ''));
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('aria-label', zn.label);
+      el.setAttribute('aria-pressed', marked[key] ? 'true' : 'false');
+      function toggle() {
+        if (marked[key]) delete marked[key]; else marked[key] = text;
+        drawBody(); drawChips();
+        var again = svg.querySelector('[aria-label="' + zn.label + '"]');
+        if (again) again.focus();
+      }
+      el.addEventListener('click', toggle);
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      });
+      svg.appendChild(el);
+    });
+  }
+  function drawChips() {
+    var box = $('chips'); box.textContent = '';
+    var keys = Object.keys(marked);
+    keys.forEach(function (k) {
+      var s = document.createElement('span'); s.className = 'chip'; s.textContent = marked[k]; box.appendChild(s);
+    });
+    $('chips-empty').hidden = keys.length > 0;
+    $('clear').hidden = keys.length === 0;
+  }
+  function setView(v) {
+    view = v;
+    $('tab-front').setAttribute('aria-pressed', v === 'front');
+    $('tab-back').setAttribute('aria-pressed', v === 'back');
+    drawBody();
+  }
+  $('tab-front').addEventListener('click', function () { setView('front'); });
+  $('tab-back').addEventListener('click', function () { setView('back'); });
+  $('clear').addEventListener('click', function () { marked = {}; drawBody(); drawChips(); });
+  drawBody(); drawChips();
+
+  /* ---------- Listas de opciones ---------- */
+  function makeButtons(container, items, capEl, emptyText) {
+    items.forEach(function (text) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'opt'; b.textContent = text; b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function () {
+        document.querySelectorAll('.opt[data-list="' + capEl.id + '"]').forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
+        b.setAttribute('aria-pressed', 'true');
+        capEl.textContent = text;
+      });
+      b.setAttribute('data-list', capEl.id);
+      container.appendChild(b);
+    });
+  }
+
+  var questions = [
+    'Buen día, ¿tu nombre?', 'Yo enfermero', 'Yo te puedo ayudar', '¿Tu edad?', '¿Tu tomar pastillas?',
+    '¿Tu dónde casa?', '¿Tu trabajar?', '¿Qué sientes?', '¿Dónde dolor?', '¿Fiebre o mareo?',
+    '¿Tener alergia a medicamento?', '¿Tener intérprete?', 'Peso', 'Estatura'
+  ];
+  makeButtons($('qlist'), questions, $('vq-cap'));
+
+  var answerGroups = [
+    ['Básicas', ['Sí', 'No']],
+    ['Saludos', ['Mucho gusto', 'Buenas tardes', 'Buenos días', 'Buenas noches']],
+    ['Indicaciones', ['Tomar pastillas', 'Tomar un descanso', 'Inyección', 'Cirugía', 'Tratamiento']],
+    ['Días de la semana', ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']]
+  ];
+  answerGroups.forEach(function (g) {
+    var wrap = document.createElement('div'); wrap.className = 'group';
+    var h = document.createElement('h3'); h.textContent = g[0]; wrap.appendChild(h);
+    var grid = document.createElement('div'); grid.className = 'grid'; wrap.appendChild(grid);
+    makeButtons(grid, g[1], $('va-cap'));
+    $('alist').appendChild(wrap);
+  });
+})();
+</script>
+
+</body>
+</html>
